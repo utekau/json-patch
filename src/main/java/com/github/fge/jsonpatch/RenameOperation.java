@@ -23,7 +23,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.fge.jackson.jsonpointer.JsonPointer;
 import com.google.common.collect.Iterables;
 
@@ -31,7 +30,7 @@ import com.google.common.collect.Iterables;
  * JSON Patch {@code rename} operation
  *
  * <p>For this operation, {@code path} points to the field name to relabel, and
- * {@code newkey} is the replacement value.</p>
+ * {@code newkey} is the replacement new key value.</p>
  *
  * <p>It is an error condition if {@code path} does not point to an actual JSON
  * key.</p>
@@ -50,28 +49,15 @@ public final class RenameOperation
     public JsonNode apply(final JsonNode node)
         throws JsonPatchException
     {
-        /*
-         * FIXME cannot quite be replaced by a remove + add because of arrays.
-         * For instance:
-         *
-         * { "op": "replace", "path": "/0", "value": 1 }
-         *
-         * with
-         *
-         * [ "x" ]
-         *
-         * If remove is done first, the array is empty and add rightly complains
-         * that there is no such index in the array.
-         */
         if (path.path(node).isMissingNode())
             throw new JsonPatchException(BUNDLE.getMessage(
-                "jsonPatch.noSuchPath"));
+                "jsonPatch.noSuchPath") + ": " + path);
 
         final JsonNode ret = node.deepCopy();
         final JsonNode parentNode = path.parent().get(ret);
-		final String fieldName = Iterables.getLast(path).getToken().getRaw();
-		((ObjectNode) parentNode).put(newkey, new TextNode(node.get(fieldName).asText()));
-		((ObjectNode) parentNode).remove(fieldName);
+		final String oldKey = Iterables.getLast(path).getToken().getRaw();
+    	((ObjectNode) parentNode).put(newkey, parentNode.get(oldKey));
+		((ObjectNode) parentNode).remove(oldKey);
         return ret;
     }
 }

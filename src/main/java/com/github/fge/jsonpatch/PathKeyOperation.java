@@ -42,7 +42,7 @@ public abstract class PathKeyOperation
      *
      * @param op operation name
      * @param path affected path
-     * @param value JSON value
+     * @param newkey String key
      */
     protected PathKeyOperation(final String op, final JsonPointer path,
         final String newkey)
